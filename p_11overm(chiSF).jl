@@ -80,7 +80,7 @@ function Calculate_BandB_prime(L::Int64, t::Int64, p::Array{Double64}, n_c::Int6
     # chiSF specific boundary terms evaluated based on the current timestep
     is_boundary = (bc_type == :chiSF && (t == 0 || t == L)) ? Double64(1) : Double64(0)
     z_f = Double64(1)
-    d_s = Double64(0.5)
+    d_s = Double64(1)/2
 
     factor_q1 = Double64(1) + is_boundary * (d_s - Double64(1))
     factor_csw = Double64(1) - is_boundary
