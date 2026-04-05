@@ -9,6 +9,7 @@ using DoubleFloats
 
 using SymmetricTensors
 
+#bc type can be :SF or :chiSF at the end of the file when calling run_simulation function. Default is :SF.
 # Define the parameters
 const eta =   Double64(0)
 const nu =   Double64(0)
@@ -135,9 +136,9 @@ function Calculate_BandB_prime(L::Int64, t::Int64, p::Array{Double64}, n_c::Int6
         end
     end
 
-    d = Double64(1) + m + Double64(0.5) * sum_q2  
+    d = Double64(1) + m + 1/Double64(2) * sum_q2  
     if is_boundary == Double64(1)
-        d += (z_f - Double64(1)) + (d_s - Double64(1)) * Double64(0.5) * sum_q2
+        d += (z_f - Double64(1)) + (d_s - Double64(1)) / Double64(2) * sum_q2
     end
 
     # Calculate B and B_prime using P_+ and P_- partitions
