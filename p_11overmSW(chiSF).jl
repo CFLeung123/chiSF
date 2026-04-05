@@ -9,6 +9,8 @@ using DoubleFloats
 
 using SymmetricTensors
 
+# Note: You can toggle `use_chiSF=true` below to utilize the newly added boundary conditions
+use_chiSF=false # Set to true to use chiSF boundary conditions, false for standard SF
 # ---- rational and irrational constants ----
 const HALF  = Double64(1) / Double64(2)      # = 1/2
 const THIRD = Double64(1) / Double64(3)      # = 1/3
@@ -265,12 +267,11 @@ p_11_dot_array = Array{ Double64}(undef, Lmax - Lmin + 1)
 
 @time begin
 
-# Note: You can toggle `use_chiSF=true` below to utilize the newly added boundary conditions
 for l in Lmin:Lmax
     @inbounds begin
         L = l
         k_normc = 12 * L^2 * (sin(PI_D64 / (3 * L^2)) + sin(2 * PI_D64 / (3 * L^2)))
-        sum,sumdot = Sum_trace(L; use_chiSF=true) 
+        sum,sumdot = Sum_trace(L; use_chiSF) 
         p_11_array[l-Lmin+1] = sum / k_normc
         p_11_dot_array[l-Lmin+1] = sumdot / k_normc
         println("L=$L completed")
