@@ -9,13 +9,19 @@ using DoubleFloats
 
 using SymmetricTensors
 
+# ---- rational and irrational constants ----
+const HALF  = Double64(1) / Double64(2)      # = 1/2
+const THIRD = Double64(1) / Double64(3)      # = 1/3
+const PI_D64 = Double64(π)                   # π as a Double64
+const SQRT3 = sqrt(Double64(3))              # √3 as a Double64
+
 # Define the parameters
 const eta =   Double64(0)
 const nu =   Double64(0)
 Lmin = 4
 Lmax = 64
-const m =   Double64(0.0)
-const theta =   Double64(pi)/5
+const m =   Double64(0)                      # was 0.0
+const theta =   PI_D64 / 5
 const c_sw =  Int64(1)
 const rho = 1
 
@@ -32,26 +38,26 @@ const gamma5 = [0 0 1 0; 0 0 0 1; 1 0 0 0; 0 1 0 0] # gamma5
 # Define 4x4 identity matrix 
 const id =  Diagonal([1,1,1,1])
 # Define P_+ and P_- constants
-const P_plus = Int64.(0.5 * (id + gamma0))
-const P_minus = Int64.(0.5 * (id - gamma0))
+const P_plus = Int64.(HALF * (id + gamma0))
+const P_minus = Int64.(HALF * (id - gamma0))
 
 # Define background fields
 # Calculate the phi  values
-const phi1 = eta - Double64(pi) /   Double64(3)
-const phi2 = eta * (nu -   Double64(1) /   Double64(2))
-const phi3 = -eta * (nu +   Double64(1) /   Double64(2)) + Double64(pi) /   Double64(3)
+const phi1 = eta - PI_D64 / Double64(3)
+const phi2 = eta * (nu - HALF)
+const phi3 = -eta * (nu + HALF) + PI_D64 / Double64(3)
 
 # Calculate the phi prime values
-const phi1_prime = -phi1 -   Double64(4) * Double64(pi) /   Double64(3)
-const phi2_prime = -phi3 +   Double64(2) * Double64(pi) /   Double64(3)
-const phi3_prime = -phi2 +   Double64(2) * Double64(pi) /   Double64(3)
+const phi1_prime = -phi1 - Double64(4) * PI_D64 / Double64(3)
+const phi2_prime = -phi3 + Double64(2) * PI_D64 / Double64(3)
+const phi3_prime = -phi2 + Double64(2) * PI_D64 / Double64(3)
 
 # Create arrays for phi and phi prime
 const phis,phis_prime  = [phi1, phi2, phi3],[phi1_prime, phi2_prime, phi3_prime]
 
 # Function to calculate eta derivatives
-const detaphis = [  Double64(1), nu -   Double64(1) /   Double64(2), -(nu +   Double64(1) /   Double64(2))]
-const detaphis_prime = [-  Double64(1), nu +   Double64(1) /   Double64(2), -(nu -   Double64(1) /   Double64(2))]
+const detaphis = [ Double64(1), nu - HALF, -(nu + HALF)]
+const detaphis_prime = [-Double64(1), nu + HALF, -(nu - HALF)]
 
 #print complex matrix with n significant figures
 function print_mat(matrix, n)
@@ -72,15 +78,15 @@ function print_mat(matrix, n)
 end
 
 # matrix B and B' with fixed time , spatial momentum and color(background fields).
-function Calculate_BandB_prime(L::Int64,t::Int64,p::Array{Double64},n_c::Int64; use_chiSF::Bool=false, z_f::Int64=1, d_s::Double64=Double64(0.5))
+function Calculate_BandB_prime(L::Int64,t::Int64,p::Array{Double64},n_c::Int64; use_chiSF::Bool=false, z_f::Int64=1, d_s::Double64=HALF)
     # Initialize color related parameters
     omega =  Double64((phis_prime[n_c]- phis[n_c])/L^2) 
     detaomega = Double64((detaphis_prime[n_c] - detaphis[n_c])/L^2)
 
     # chiSF boundary conditions identification
     at_boundary = use_chiSF && (t == 0 || t == L)
-    eff_c_sw = at_boundary ? Double64(0) : c_sw
-    ds_factor = at_boundary ? d_s : Double64(1.0)
+    eff_c_sw = at_boundary ? Double64(0) : Double64(c_sw)
+    ds_factor = at_boundary ? d_s : Double64(1)
 
     # Initialize 
     M_0 = Double64(4+m)
@@ -107,8 +113,8 @@ function Calculate_BandB_prime(L::Int64,t::Int64,p::Array{Double64},n_c::Int64; 
     sumd = Double64(0)
     detad_bulk_sum = Double64(0)
     
-    temp = M_0 * sin(Double64(sqrt(3))*A)/Double64(sqrt(3))
-    dtemp = M_0 * cos(Double64(sqrt(3))*A)*detaA 
+    temp = M_0 * sin(SQRT3 * A) / SQRT3
+    dtemp = M_0 * cos(SQRT3 * A) * detaA 
     
     # Compute coefficients and derivatives
     for k in 1:3
@@ -116,7 +122,7 @@ function Calculate_BandB_prime(L::Int64,t::Int64,p::Array{Double64},n_c::Int64; 
             r[k] = phis[n_c] / L + p[k]   
             q0[k] += r[k]
             q1[k] = sin(q0[k])
-            q2[k] = 2 * sin(0.5 * q0[k])
+            q2[k] = 2 * sin(HALF * q0[k])
 
             tempk = im * ds_factor * q1[k] 
             b[k] = tempk + temp
@@ -141,8 +147,8 @@ function Calculate_BandB_prime(L::Int64,t::Int64,p::Array{Double64},n_c::Int64; 
         d = 1 + m + q2_half_sum + (z_f - 1) + (d_s - 1) * q2_half_sum
         detad = d_s * detad_bulk_sum
     else
-        d = M_0*cos(Double64(sqrt(3))*A) - sumd
-        detad = -Double64(sqrt(3))*M_0*detaA*sin(Double64(sqrt(3))*A) + detad_bulk_sum
+        d = M_0 * cos(SQRT3 * A) - sumd
+        detad = -SQRT3 * M_0 * detaA * sin(SQRT3 * A) + detad_bulk_sum
     end
 
     # Calculate B and B_prime using P_+ and P_- partitions
@@ -156,8 +162,8 @@ function Calculate_BandB_prime(L::Int64,t::Int64,p::Array{Double64},n_c::Int64; 
     B_prime[3:4,1:4] = gamma_sumdetac * (id - gamma_sumb) - gamma_sumc * gamma_sumdetab + 2 * d * detad * id[3:4,1:4] 
     B_prime[1:2,1:4] = -gamma_sumdetab[1:2,1:4]
 
-    B_dot  = P_minus*2*d
-    B_dotprime = P_minus*2*detad
+    B_dot  = P_minus * 2 * d
+    B_dotprime = P_minus * 2 * detad
 
     return B, B_prime, B_dot, B_dotprime
 end
@@ -179,13 +185,13 @@ function Sum_trace(L::Int64; use_chiSF::Bool=false)
     p = Array{Double64}(undef, 3)
     
     # chiSF initial and final projection matrices
-    proj_end = 0.5 .* (id + im .* gamma5)
+    proj_end = HALF .* (id + im .* gamma5)
     proj_start = (id - im .* gamma5)[:, 3:4]
 
     for n in pyramidindices(3, L_s)
         for n_c in 1:3
             @inbounds begin
-                p .= ( (2Double64(pi)) .* n .+ theta) ./ L_s
+                p .= ( (2 * PI_D64) .* n .+ theta) ./ L_s
 
                 if use_chiSF
                     # chiSF initialization (starts at t = 0)
@@ -263,10 +269,10 @@ p_11_dot_array = Array{ Double64}(undef, Lmax - Lmin + 1)
 for l in Lmin:Lmax
     @inbounds begin
         L = l
-        k_normc = 12 * L^2 * (sin(Double64(pi) / (3 * L^2)) + sin( 2Double64(pi) / (3 * L^2)))
+        k_normc = 12 * L^2 * (sin(PI_D64 / (3 * L^2)) + sin(2 * PI_D64 / (3 * L^2)))
         sum,sumdot = Sum_trace(L; use_chiSF=true) 
-        p_11_array[l-Lmin+1] =sum/k_normc
-        p_11_dot_array[l-Lmin+1] =sumdot/k_normc
+        p_11_array[l-Lmin+1] = sum / k_normc
+        p_11_dot_array[l-Lmin+1] = sumdot / k_normc
         println("L=$L completed")
     end
 end
